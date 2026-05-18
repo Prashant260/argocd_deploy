@@ -11,6 +11,8 @@ Jenkins pipeline
   |
 Docker build
   |
+Security scan
+  |
 Push image to JFrog
 ```
 
@@ -74,11 +76,14 @@ Create these Jenkins credentials:
 
 Create a Jenkins Pipeline job and point it to this repo. Use `Jenkinsfile` as the script path.
 
+More detailed steps are in `docs/jenkins-setup.md`.
+
 ## Jenkins Parameters
 
 - `IMAGE_TAG` - image tag, default is `latest`
 - `JFROG_REPO` - Artifactory Docker repo, default is `docker-local`
 - `RUNNER_VERSION` - GitHub Actions runner version, default is `2.334.0`
+- `RUN_SECURITY_SCAN` - run Trivy scan if Trivy is installed, default is `true`
 
 ## Run Image Manually
 
