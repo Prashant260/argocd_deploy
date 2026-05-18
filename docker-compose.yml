@@ -5,8 +5,7 @@ services:
     image: github-runner:latest
     container_name: github-runner
     env_file:
-      - path: .env
-        required: false
+      - .env
     environment:
       RUNNER_NAME: local-github-runner
       RUNNER_LABELS: linux,x64,docker,jfrog

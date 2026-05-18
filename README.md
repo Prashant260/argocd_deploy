@@ -53,7 +53,7 @@ Update `.env`:
 
 ```sh
 GITHUB_REPOSITORY=owner/repo
-GITHUB_TOKEN=your_github_token
+RUNNER_TOKEN=token_from_github_runner_page
 ```
 
 Start the runner:
@@ -82,7 +82,7 @@ Create a Jenkins Pipeline job and point it to this repo. Use `Jenkinsfile` as th
 docker run --rm \
   --name github-runner \
   -e GITHUB_REPOSITORY=owner/repo \
-  -e GITHUB_TOKEN=your_github_token \
+  -e RUNNER_TOKEN=token_from_github_runner_page \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v runner-work:/home/runner/_work \
   artifactory.company.com/docker-local/github-runner:latest
@@ -92,5 +92,7 @@ docker run --rm \
 
 - The runner process runs as the `runner` user.
 - The container needs the Docker socket if workflows build Docker images.
+- Use `RUNNER_TOKEN` for the temporary token from GitHub's runner setup page.
+- Use `GITHUB_TOKEN` only for a real GitHub PAT, usually starting with `ghp_` or `github_pat_`.
 - Keep `RUNNER_VERSION` in the Dockerfile updated.
 - Keep GitHub and JFrog tokens in secrets, not in the repo.

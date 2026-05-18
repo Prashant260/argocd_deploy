@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 LABEL maintainer="DevOps Team"
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV RUNNER_VERSION=2.317.0
+ENV RUNNER_VERSION=2.334.0
 
 # Install packages needed by the runner and common CI jobs.
 RUN apt-get update && apt-get install -y \

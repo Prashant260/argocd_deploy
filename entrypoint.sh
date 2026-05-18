@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+ENTRYPOINT_VERSION="2026-05-19"
 RUNNER_DIR="/actions-runner"
 RUNNER_USER="runner"
 WORK_DIR="${RUNNER_WORKDIR:-/home/runner/_work}"
@@ -8,6 +9,8 @@ RUNNER_NAME="${RUNNER_NAME:-$(hostname)}"
 RUNNER_LABELS="${RUNNER_LABELS:-linux,x64,docker,jfrog}"
 
 cd "${RUNNER_DIR}"
+
+echo "Runner entrypoint version: ${ENTRYPOINT_VERSION}"
 
 # This helps the runner user access the mounted Docker socket.
 if [ -S /var/run/docker.sock ]; then
@@ -47,19 +50,24 @@ else
     exit 1
   fi
 
-  echo "Getting runner registration token from GitHub"
-  API_RESPONSE=$(curl -sX POST \
-    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token")
+  if echo "${GITHUB_TOKEN}" | grep -Eq '^(ghp_|github_pat_)'; then
+    echo "Getting runner registration token from GitHub PAT"
+    API_RESPONSE=$(curl -sX POST \
+      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+      -H "Accept: application/vnd.github+json" \
+      "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token")
 
-  REG_TOKEN=$(echo "${API_RESPONSE}" | jq -r .token)
+    REG_TOKEN=$(echo "${API_RESPONSE}" | jq -r .token)
 
-  if [ -z "${REG_TOKEN}" ] || [ "${REG_TOKEN}" = "null" ]; then
-    echo "Could not get runner token"
-    echo "GitHub API response:"
-    echo "${API_RESPONSE}" | jq .
-    exit 1
+    if [ -z "${REG_TOKEN}" ] || [ "${REG_TOKEN}" = "null" ]; then
+      echo "Could not get runner token"
+      echo "GitHub API response:"
+      echo "${API_RESPONSE}" | jq .
+      exit 1
+    fi
+  else
+    echo "GITHUB_TOKEN does not look like a PAT, using it as a runner registration token"
+    REG_TOKEN="${GITHUB_TOKEN}"
   fi
 fi
 
