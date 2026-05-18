@@ -30,6 +30,12 @@ if [ -z "${GITHUB_REPOSITORY}" ]; then
   exit 1
 fi
 
+if echo "${GITHUB_REPOSITORY}" | grep -q '^https://'; then
+  echo "GITHUB_REPOSITORY should be owner/repo, not a full URL"
+  echo "Example: GITHUB_REPOSITORY=Prashant260/argocd_deploy"
+  exit 1
+fi
+
 if [ -z "${GITHUB_TOKEN}" ]; then
   echo "Please set GITHUB_TOKEN"
   exit 1
@@ -38,13 +44,17 @@ fi
 RUNNER_URL="https://github.com/${GITHUB_REPOSITORY}"
 
 echo "Getting runner registration token from GitHub"
-REG_TOKEN=$(curl -sX POST \
+API_RESPONSE=$(curl -sX POST \
   -H "Authorization: token ${GITHUB_TOKEN}" \
   -H "Accept: application/vnd.github+json" \
-  "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token" | jq -r .token)
+  "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token")
+
+REG_TOKEN=$(echo "${API_RESPONSE}" | jq -r .token)
 
 if [ -z "${REG_TOKEN}" ] || [ "${REG_TOKEN}" = "null" ]; then
   echo "Could not get runner token"
+  echo "GitHub API response:"
+  echo "${API_RESPONSE}" | jq .
   exit 1
 fi
 
