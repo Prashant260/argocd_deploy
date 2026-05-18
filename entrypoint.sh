@@ -36,26 +36,31 @@ if echo "${GITHUB_REPOSITORY}" | grep -q '^https://'; then
   exit 1
 fi
 
-if [ -z "${GITHUB_TOKEN}" ]; then
-  echo "Please set GITHUB_TOKEN"
-  exit 1
-fi
-
 RUNNER_URL="https://github.com/${GITHUB_REPOSITORY}"
 
-echo "Getting runner registration token from GitHub"
-API_RESPONSE=$(curl -sX POST \
-  -H "Authorization: token ${GITHUB_TOKEN}" \
-  -H "Accept: application/vnd.github+json" \
-  "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token")
+if [ -n "${RUNNER_TOKEN}" ]; then
+  echo "Using runner registration token from RUNNER_TOKEN"
+  REG_TOKEN="${RUNNER_TOKEN}"
+else
+  if [ -z "${GITHUB_TOKEN}" ]; then
+    echo "Please set GITHUB_TOKEN or RUNNER_TOKEN"
+    exit 1
+  fi
 
-REG_TOKEN=$(echo "${API_RESPONSE}" | jq -r .token)
+  echo "Getting runner registration token from GitHub"
+  API_RESPONSE=$(curl -sX POST \
+    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+    -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token")
 
-if [ -z "${REG_TOKEN}" ] || [ "${REG_TOKEN}" = "null" ]; then
-  echo "Could not get runner token"
-  echo "GitHub API response:"
-  echo "${API_RESPONSE}" | jq .
-  exit 1
+  REG_TOKEN=$(echo "${API_RESPONSE}" | jq -r .token)
+
+  if [ -z "${REG_TOKEN}" ] || [ "${REG_TOKEN}" = "null" ]; then
+    echo "Could not get runner token"
+    echo "GitHub API response:"
+    echo "${API_RESPONSE}" | jq .
+    exit 1
+  fi
 fi
 
 remove_runner() {
