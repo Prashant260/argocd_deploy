@@ -1,6 +1,6 @@
 # GitHub Self-Hosted Runner Image
 
-This repo builds a Docker image for a GitHub self-hosted runner. Jenkins builds the image, scans it if Trivy is installed, and pushes it to JFrog Artifactory.
+This repo builds a Docker image for a GitHub self-hosted runner. Jenkins builds the image and pushes it to JFrog Artifactory.
 
 ## Flow
 
@@ -11,15 +11,14 @@ Jenkins pipeline
   |
 Docker build
   |
-Trivy scan
-  |
 Push image to JFrog
 ```
 
 ## Files
 
 - `Dockerfile` - builds the runner image
-- `entrypoint.sh` - registers and starts the GitHub runner
+- `start.sh` - registers and starts the GitHub runner
+- `entrypoint.sh` - old wrapper that calls `start.sh`
 - `Jenkinsfile` - builds and pushes the image
 - `docker-compose.yml` - local testing setup
 - `.env.example` - example local environment file
@@ -28,12 +27,10 @@ Push image to JFrog
 
 - Git
 - Docker CLI
-- Node.js and npm
-- Python 3 and pip
-- kubectl
-- Helm
-- Argo CD CLI
-- jq, curl, wget, unzip
+- jq
+- curl
+- sudo
+- tar
 
 ## Local Build
 
@@ -62,6 +59,12 @@ Start the runner:
 docker compose up
 ```
 
+If workflow jobs cannot access Docker, set the host Docker group id in `.env`:
+
+```sh
+DOCKER_GID=$(getent group docker | cut -d: -f3)
+```
+
 ## Jenkins Setup
 
 Create these Jenkins credentials:
@@ -75,6 +78,7 @@ Create a Jenkins Pipeline job and point it to this repo. Use `Jenkinsfile` as th
 
 - `IMAGE_TAG` - image tag, default is `latest`
 - `JFROG_REPO` - Artifactory Docker repo, default is `docker-local`
+- `RUNNER_VERSION` - GitHub Actions runner version, default is `2.334.0`
 
 ## Run Image Manually
 
@@ -92,7 +96,8 @@ docker run --rm \
 
 - The runner process runs as the `runner` user.
 - The container needs the Docker socket if workflows build Docker images.
+- `DOCKER_GID` should match the host Docker group id when using `docker-compose.yml`.
 - Use `RUNNER_TOKEN` for the temporary token from GitHub's runner setup page.
 - Use `GITHUB_TOKEN` only for a real GitHub PAT, usually starting with `ghp_` or `github_pat_`.
-- Keep `RUNNER_VERSION` in the Dockerfile updated.
+- Keep the Jenkins `RUNNER_VERSION` parameter updated when GitHub releases a new runner.
 - Keep GitHub and JFrog tokens in secrets, not in the repo.

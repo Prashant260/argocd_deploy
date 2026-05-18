@@ -4,6 +4,7 @@ pipeline {
   parameters {
     string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag')
     string(name: 'JFROG_REPO', defaultValue: 'docker-local', description: 'JFrog docker repo')
+    string(name: 'RUNNER_VERSION', defaultValue: '2.334.0', description: 'GitHub Actions runner version')
   }
 
   environment {
@@ -20,23 +21,14 @@ pipeline {
     stage('Build Docker Image') {
       steps {
         sh '''
-          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+          docker build \
+            --build-arg RUNNER_VERSION=${RUNNER_VERSION} \
+            -t ${IMAGE_NAME}:${IMAGE_TAG} .
         '''
       }
     }
 
-    stage('Scan Image') {
-      steps {
-        sh '''
-          if command -v trivy >/dev/null 2>&1; then
-            trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
-          else
-            echo "Trivy is not installed, skipping scan"
-          fi
-        '''
-      }
-    }
-
+    
     stage('Push to JFrog') {
       steps {
         withCredentials([

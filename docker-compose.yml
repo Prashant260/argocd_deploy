@@ -9,6 +9,8 @@ services:
     environment:
       RUNNER_NAME: local-github-runner
       RUNNER_LABELS: linux,x64,docker,jfrog
+    group_add:
+      - "${DOCKER_GID:-999}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - runner-work:/home/runner/_work
