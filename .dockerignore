@@ -1,0 +1,6 @@
+.git
+.gitignore
+.env
+README.md
+Jenkinsfile
+docker-compose.yml

@@ -1,0 +1,18 @@
+services:
+  github-runner:
+    build:
+      context: .
+    image: github-runner:latest
+    container_name: github-runner
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      RUNNER_NAME: local-github-runner
+      RUNNER_LABELS: linux,x64,docker,jfrog
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner-work:/home/runner/_work
+
+volumes:
+  runner-work:
