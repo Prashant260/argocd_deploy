@@ -28,11 +28,15 @@ pipeline {
       steps {
         script {
           env.SHORT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+          env.BUILD_IMAGE_TAG = params.IMAGE_TAG?.trim() ? params.IMAGE_TAG.trim() : 'latest'
+          env.BUILD_JFROG_REPO = params.JFROG_REPO?.trim() ? params.JFROG_REPO.trim() : 'docker-local'
+          env.BUILD_RUNNER_VERSION = params.RUNNER_VERSION?.trim() ? params.RUNNER_VERSION.trim() : '2.334.0'
         }
         sh '''
           echo "Image name: ${IMAGE_NAME}"
-          echo "Image tag: ${IMAGE_TAG}"
-          echo "Runner version: ${RUNNER_VERSION}"
+          echo "Image tag: ${BUILD_IMAGE_TAG}"
+          echo "JFrog repo: ${BUILD_JFROG_REPO}"
+          echo "Runner version: ${BUILD_RUNNER_VERSION}"
         '''
       }
     }
@@ -41,8 +45,8 @@ pipeline {
       steps {
         sh '''
           docker build \
-            --build-arg RUNNER_VERSION=${RUNNER_VERSION} \
-            -t ${IMAGE_NAME}:${IMAGE_TAG} \
+            --build-arg RUNNER_VERSION=${BUILD_RUNNER_VERSION} \
+            -t ${IMAGE_NAME}:${BUILD_IMAGE_TAG} \
             -t ${IMAGE_NAME}:${SHORT_SHA} .
         '''
       }
@@ -55,7 +59,7 @@ pipeline {
       steps {
         sh '''
           if command -v trivy >/dev/null 2>&1; then
-            trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+            trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:${BUILD_IMAGE_TAG}
           else
             echo "Trivy is not installed on this Jenkins agent, skipping scan"
           fi
@@ -72,14 +76,14 @@ pipeline {
           sh '''
             set -e
 
-            JFROG_IMAGE="${JFROG_REGISTRY}/${JFROG_REPO}/${IMAGE_NAME}"
+            JFROG_IMAGE="${JFROG_REGISTRY}/${BUILD_JFROG_REPO}/${IMAGE_NAME}"
 
             echo "${JFROG_PASS}" | docker login "${JFROG_REGISTRY}" -u "${JFROG_USER}" --password-stdin
 
-            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${JFROG_IMAGE}:${IMAGE_TAG}
+            docker tag ${IMAGE_NAME}:${BUILD_IMAGE_TAG} ${JFROG_IMAGE}:${BUILD_IMAGE_TAG}
             docker tag ${IMAGE_NAME}:${SHORT_SHA} ${JFROG_IMAGE}:${SHORT_SHA}
 
-            docker push ${JFROG_IMAGE}:${IMAGE_TAG}
+            docker push ${JFROG_IMAGE}:${BUILD_IMAGE_TAG}
             docker push ${JFROG_IMAGE}:${SHORT_SHA}
           '''
         }
