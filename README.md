@@ -11,8 +11,6 @@ Jenkins pipeline
   |
 Docker build
   |
-Security scan
-  |
 Push image to JFrog
 ```
 
@@ -83,7 +81,7 @@ More detailed steps are in `docs/jenkins-setup.md`.
 - `IMAGE_TAG` - image tag, default is `latest`
 - `JFROG_REPO` - Artifactory Docker repo, default is `docker-local`
 - `RUNNER_VERSION` - GitHub Actions runner version, default is `2.334.0`
-- `RUN_SECURITY_SCAN` - run Trivy scan if Trivy is installed, default is `true`
+- `DOCKER_CLI_VERSION` - Docker CLI version installed in the image, default is `27.5.1`
 
 ## Run Image Manually
 
@@ -100,7 +98,7 @@ docker run --rm \
 ## Notes
 
 - The runner process runs as the `runner` user.
-- The container needs the Docker socket if workflows build Docker images.
+- The image installs the Docker CLI only. It uses the host Docker socket if workflows build Docker images.
 - `DOCKER_GID` should match the host Docker group id when using `docker-compose.yml`.
 - Use `RUNNER_TOKEN` for the temporary token from GitHub's runner setup page.
 - Use `GITHUB_TOKEN` only for a real GitHub PAT, usually starting with `ghp_` or `github_pat_`.

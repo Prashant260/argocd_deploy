@@ -10,7 +10,6 @@ The Jenkins agent that runs this job needs:
 - Permission to run Docker commands
 - Git installed
 - Network access to GitHub and JFrog Artifactory
-- Trivy installed if `RUN_SECURITY_SCAN` is enabled
 
 ## Jenkins Credentials
 
@@ -42,7 +41,7 @@ Use the Docker registry hostname for `jfrog-registry-url`. Do not include the im
 | `IMAGE_TAG` | `latest` | Main image tag pushed to JFrog |
 | `JFROG_REPO` | `docker-local` | JFrog Docker repository |
 | `RUNNER_VERSION` | `2.334.0` | GitHub Actions runner version |
-| `RUN_SECURITY_SCAN` | `true` | Runs Trivy if available |
+| `DOCKER_CLI_VERSION` | `27.5.1` | Docker CLI version installed in the image |
 
 ## Expected Image Tags
 
@@ -61,10 +60,8 @@ Run the Jenkins job with defaults first:
 IMAGE_TAG=latest
 JFROG_REPO=docker-local
 RUNNER_VERSION=2.334.0
-RUN_SECURITY_SCAN=true
+DOCKER_CLI_VERSION=27.5.1
 ```
-
-If Trivy is not installed, the scan stage will print a skip message and continue.
 
 ## Common Issues
 
