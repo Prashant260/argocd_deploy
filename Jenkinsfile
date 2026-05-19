@@ -43,9 +43,23 @@ pipeline {
       }
     }
 
+    stage('Docker Preflight') {
+      steps {
+        sh '''
+          set -e
+
+          docker version
+          docker info
+          docker run --rm ubuntu:22.04 sh -c 'echo Docker runtime is working'
+        '''
+      }
+    }
+
     stage('Build Docker Image') {
       steps {
         sh '''
+          set -e
+
           docker build \
             --build-arg RUNNER_VERSION=${BUILD_RUNNER_VERSION} \
             --build-arg DOCKER_CLI_VERSION=${BUILD_DOCKER_CLI_VERSION} \
